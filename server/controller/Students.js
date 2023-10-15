@@ -2,6 +2,7 @@ const express = require('express');
 const Student = require('../models/Student');
 const Parent = require('../models/Parent');
 const StudentAudit = require('../models/StudentAudit');
+// const Student = require('../models/Student');
 
 
 const createStudent = async(req,res)=>{
@@ -25,7 +26,7 @@ const createStudent = async(req,res)=>{
     const savedStudent = await Student.create(student);
 
     const studentAudit = {
-        message: `Student ${savedStudent.name} has been Created`,
+        message: `Student ${savedStudent.name} has been Created by ${req.queries.email}`,
         stuId: savedStudent._id,
         parentAuditId: data.auditId,
         method: "Create",
@@ -53,8 +54,28 @@ const getStudents = async(req,res)=>{
     return res.status(200).json({message : Students});
 };
 
+const getStudent = async(req,res)=>{
+    const data = req.body;
+    console.log(data);
+    const student = await Student.find({_id: data.id});
+    console.log(student)
+    const studentAudits = await StudentAudit.find({stuId: data.id}).sort({_id : 1});
+    console.log(studentAudits);
+    return res.status(200).json({data: student , audits : studentAudits});
+}
+
+const updateStudent = async (req,res)=>{
+    const data = req.body;
+    const createdStudent = await Student.updateOne({_id: data._id},{
+        $set : {
+            data
+        }
+    });
+}
 
 module.exports = {
     getStudents,
-    createStudent
+    createStudent,
+    getStudent,
+    updateStudent
 }

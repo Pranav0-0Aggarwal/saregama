@@ -1,39 +1,38 @@
 // Write the code to get all the relevant commits / logs.
 const StudentAudit = require('../models/StudentAudit');
+const mongoose = require('mongoose');
 const Student = require('../models/Student');
 
 
 const getStudentsAudit = async(req,res)=>{
-    const studentAudits = await StudentAudit.find()
+    const s_id = req.body.id;
+    const studentAudits = await StudentAudit.find({stuId: s_id}).sort({ _id : 1 })
     return res.status(200).json({audits : studentAudits});
 };
 
 const revertStudentAudit = async(req,res)=>{
-    console.log("Entered into revert audit");
+    
     const data = req.body;
     const id = data.id;
     const curr_v = data.version;
-    console.log(`current verion ${curr_v} ${data.version}`)
-    // const parent_v = data.version;
-    // const targetStudentAudit = await StudentAudit.find({_id: id});
+    
     const currentStudentAudit = await StudentAudit.findOne({version : curr_v});
-    console.log(currentStudentAudit);
+    
     async function revertBack(currentStudentAudit){
-        console.log(`i am in revert Back .... `);
-        console.log(currentStudentAudit);
+        
         // base case
         if(currentStudentAudit == null){
-            // do something
-            // console.log("i am in base case")
+            
             await Student.deleteMany({ _id: {$exists: true} });
-            const arr = await Student.find({})
-            // console.log("after delete");
-            console.log(arr);
-            // console.log("after the delete many function");
+        
             return;
         }
-        const parentStudentAudit = await StudentAudit.findOne({_id : currentStudentAudit.parentAuditId});
-        // console.log('parent audit :');
+        let parentStudentAudit = null;
+        if(currentStudentAudit.parentAuditId != "null"){
+            const p_audit_id = currentStudentAudit.parentAuditId
+            parentStudentAudit = await StudentAudit.findOne({_id : p_audit_id});
+        }
+        
         console.log(parentStudentAudit);
 
         await revertBack(parentStudentAudit)
@@ -43,11 +42,23 @@ const revertStudentAudit = async(req,res)=>{
         var newState = currentStudentAudit.newState;
         if(method == "Create"){
             console.log("enterd into creted ///");
-            // const all = await Student.find({});
-            // console.log(all);
             console.log(newState);
-            
-            await Student.create(newState.student);
+            const addedStudent = await Student.create(newState.student);
+            const newid = addedStudent._id;
+            console.log(newid);
+            currentStudentAudit.stuId = newid;
+            console.log("ehllo");
+            const nc = await currentStudentAudit.save();
+            console.log("eee")
+            console.log(nc);
+            // const newId = addedStudent._id;
+            // console.log(newId);
+            // console.log(currentStudentAudit.stuId);
+            // console.log(currentStudentAudit);
+            // currentStudentAudit.stuId = newId;
+            // currentStudentAudit.save();
+            // console.log(currentStudentAudit.stuId);
+            // console.log(currentStudentAudit);
             return;
             
         }
