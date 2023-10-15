@@ -24,12 +24,8 @@ const StudentAudit = new Schema(
     method:{
         type:String,
     },
-    oldState:{
-
-    },
-    newState:{
-
-    }
+    oldState:{},
+    newState:{}
   },
   {
     timestamps: true,
